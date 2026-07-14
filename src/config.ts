@@ -10,7 +10,8 @@ export const config = {
   rpcUrl: process.env.RPC_URL ?? "https://forno.celo.org",
   blockscoutUrl: process.env.BLOCKSCOUT_URL ?? "https://celo.blockscout.com",
 
-  payTo: required("PAY_TO_ADDRESS") as `0x${string}`,
+  // Address pública (no secreta) — default permite deploy sin env vars
+  payTo: (process.env.PAY_TO_ADDRESS ?? "0x444519D8149176ed817228B11dFB9695c3f1c877") as `0x${string}`,
   facilitatorUrl: process.env.X402_FACILITATOR_URL ?? "https://api.x402.celo.org",
   // Sin key => modo free (checks sin paywall). Con key => paywall x402 activo.
   x402ApiKey: process.env.X402_API_KEY ?? "",

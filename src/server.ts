@@ -74,6 +74,25 @@ export function buildServer() {
 
   app.get("/health", (_req, res) => res.json({ ok: true, service: "celo-sentinel", x402: x402Enabled }));
 
+  // Archivo de registro ERC-8004 (agentURI apunta aquí al registrar en el IdentityRegistry)
+  const registrationHandler = (req: Request, res: Response) => {
+    const base = `${req.protocol}://${req.headers.host}`;
+    res.json({
+      type: "Agent",
+      name: "celo-sentinel",
+      description:
+        "On-chain security checks for Celo, paid per request via x402. Token/contract/wallet safety with actionable recommendations (SAFE/CAUTION/AVOID). The token-safety API Celo doesn't have.",
+      image: "",
+      endpoints: [
+        { type: "a2a", url: `${base}/` },
+        { type: "wallet", address: config.payTo, chainId: 42220 },
+      ],
+      supportedTrust: ["reputation"],
+    });
+  };
+  app.get("/registration.json", registrationHandler);
+  app.get("/.well-known/agent.json", registrationHandler);
+
   // Descriptor del servicio para agentes: cómo usar el sentinel sin permiso de nadie.
   app.get("/", (_req, res) => {
     res.json({
