@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "vercel-build": "echo 'api/ functions are compiled by Vercel — no build step'"
   },
   "license": "MIT",
   "dependencies": {
