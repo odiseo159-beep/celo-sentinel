@@ -17,7 +17,7 @@ export const config = {
   x402ApiKey: process.env.X402_API_KEY ?? "",
   checkPriceUsdt: process.env.CHECK_PRICE_USDT ?? "1000", // 0.001 USDT (6 dec)
 
-  port: Number(process.env.PORT ?? 8080),
+  port: Number(process.env.PORT ?? 1996),
 } as const;
 
 /** true cuando hay API key => cobramos vía x402. false => modo free para desarrollo. */

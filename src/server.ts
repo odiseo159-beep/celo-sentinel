@@ -6,6 +6,7 @@ import { config, x402Enabled, CELO_NETWORK, USDT, USDT_EIP712 } from "./config.j
 import { checkToken } from "./checks/token.js";
 import { checkContract } from "./checks/contract.js";
 import { checkWallet } from "./checks/wallet.js";
+import { dashboardHtml } from "./dashboard.js";
 
 const PRICE = { asset: USDT, amount: config.checkPriceUsdt, extra: { ...USDT_EIP712 } };
 
@@ -92,6 +93,15 @@ export function buildServer() {
   };
   app.get("/registration.json", registrationHandler);
   app.get("/.well-known/agent.json", registrationHandler);
+
+  // GET /: humanos (Accept: text/html) ven el dashboard; agentes reciben el descriptor JSON.
+  app.get("/", (req, res, next) => {
+    if (req.accepts(["json", "html"]) === "html") {
+      res.type("html").send(dashboardHtml(config.payTo, config.checkPriceUsdt, x402Enabled));
+      return;
+    }
+    next();
+  });
 
   // Descriptor del servicio para agentes: cómo usar el sentinel sin permiso de nadie.
   app.get("/", (_req, res) => {
