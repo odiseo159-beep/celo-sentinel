@@ -3,6 +3,8 @@
  * serverless de Vercel no dependa de leer archivos del filesystem.
  * Humanos ven esto en GET / ; los agentes (Accept: json) reciben el descriptor.
  */
+import { MASCOT_ASCII_HTML } from "./mascot.js";
+
 export function dashboardHtml(payTo: string, price: string, x402Active: boolean): string {
   return `<!doctype html>
 <html lang="en">
@@ -65,7 +67,17 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
   .statusbar a:hover { color: var(--yellow); }
 
   /* hero */
-  .hero { padding: 84px 0 64px; }
+  .hero { display: grid; grid-template-columns: 1.25fr auto; align-items: center; gap: 32px; padding: 84px 0 64px; }
+  .hero-text { min-width: 0; }
+  .hero-mascot {
+    justify-self: end; opacity: 0; animation: rise .8s .55s forwards;
+    filter: drop-shadow(0 0 26px rgba(252,255,82,.10));
+  }
+  .hero-mascot pre {
+    font-family: var(--mono); font-size: 8.5px; line-height: 8.5px; letter-spacing: 0;
+    white-space: pre; margin: 0;
+  }
+  @media (max-width: 780px) { .hero { grid-template-columns: 1fr; } .hero-mascot { justify-self: start; opacity: .5; } .hero-mascot pre { font-size: 6px; line-height: 6px; } }
   .kicker { color: var(--yellow); font-size: 12px; letter-spacing: .28em; text-transform: uppercase; margin-bottom: 18px; opacity: 0; animation: rise .6s .1s forwards; }
   h1 {
     font-family: var(--display); font-weight: 700; font-size: clamp(42px, 7.5vw, 84px);
@@ -156,17 +168,20 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
   </div>
 
   <section class="hero">
-    <div class="kicker">on-chain security · pay per request · x402</div>
-    <h1>CELO<span class="hollow">-SENTINEL</span></h1>
-    <p class="sub">The token-safety API <b>Celo doesn't have</b>. GoPlus covers 43 chains — Celo isn't one of them.
-    One <b>$0.001 micropayment</b> buys your agent a honeypot simulation, risk flags and an actionable verdict
-    <b>before</b> it trades.<span class="cursor"></span></p>
-    <div class="heromtr">
-      <div class="mtr"><div class="n">$0.001</div><div class="l">per check</div></div>
-      <div class="mtr"><div class="n">~1s</div><div class="l">x402 settlement</div></div>
-      <div class="mtr"><div class="n">0 gas</div><div class="l">EIP-3009 · facilitator pays</div></div>
-      <div class="mtr"><div class="n" id="statmtr">—</div><div class="l">status</div></div>
+    <div class="hero-text">
+      <div class="kicker">on-chain security · pay per request · x402</div>
+      <h1>CELO<span class="hollow">-SENTINEL</span></h1>
+      <p class="sub">The token-safety API <b>Celo doesn't have</b>. GoPlus covers 43 chains — Celo isn't one of them.
+      One <b>$0.001 micropayment</b> buys your agent a honeypot simulation, risk flags and an actionable verdict
+      <b>before</b> it trades.<span class="cursor"></span></p>
+      <div class="heromtr">
+        <div class="mtr"><div class="n">$0.001</div><div class="l">per check</div></div>
+        <div class="mtr"><div class="n">~1s</div><div class="l">x402 settlement</div></div>
+        <div class="mtr"><div class="n">0 gas</div><div class="l">EIP-3009 · facilitator pays</div></div>
+        <div class="mtr"><div class="n" id="statmtr">—</div><div class="l">status</div></div>
+      </div>
     </div>
+    <div class="hero-mascot"><pre>${MASCOT_ASCII_HTML}</pre></div>
   </section>
 
   <h2>Endpoints</h2>

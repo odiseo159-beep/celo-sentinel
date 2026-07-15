@@ -5,3 +5,5 @@ node_modules/
 WALLETS*.json
 dist/
 .DS_Store
+assets/*.png
+assets/*.jpg
