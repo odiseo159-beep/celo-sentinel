@@ -15,49 +15,40 @@ const SRC = path.join(__dirname, "..", "assets", "mascot-source.png");
 const OUT = path.join(__dirname, "..", "src", "mascot.ts");
 const BG = { r: 245, g: 3, b: 117 };
 const BG_THRESHOLD = 55; // distancia euclidiana en RGB para considerar "fondo"
-const COLS = 60;
+const COLS = 96;
 const CHAR_ASPECT = 0.55; // ancho/alto aprox. de un glyph monospace
-const RAMP = " .:-=+*#%@█"; // luminancia baja -> alta (convención terminal, no tinta)
+const RAMP = " .`'\":-,^~;+iltIcv?%*U#O0@██"; // rampa larga -> más gradación tonal a mayor resolución
+
+// Paleta del sitio (Mission Control): recolorea por luminancia en vez de preservar
+// el rosa/azul original, para que el mascot combine con el resto del dashboard.
+const STOPS = [
+  { t: 0.00, c: [13, 17, 21] },    // --panel, casi invisible: se funde con el fondo
+  { t: 0.22, c: [29, 37, 46] },    // --line
+  { t: 0.42, c: [102, 115, 127] }, // --dim
+  { t: 0.60, c: [45, 130, 90] },   // verde oscuro intermedio
+  { t: 0.76, c: [74, 222, 128] },  // --green
+  { t: 0.90, c: [251, 191, 36] },  // --amber
+  { t: 1.00, c: [252, 255, 82] },  // --yellow (máximo brillo)
+];
+function paletteColor(t) {
+  for (let i = 0; i < STOPS.length - 1; i++) {
+    const a = STOPS[i], b = STOPS[i + 1];
+    if (t >= a.t && t <= b.t) {
+      const f = (t - a.t) / (b.t - a.t || 1);
+      return [
+        Math.round(a.c[0] + (b.c[0] - a.c[0]) * f),
+        Math.round(a.c[1] + (b.c[1] - a.c[1]) * f),
+        Math.round(a.c[2] + (b.c[2] - a.c[2]) * f),
+      ];
+    }
+  }
+  return STOPS[STOPS.length - 1].c;
+}
 
 function dist(r, g, b) {
   return Math.sqrt((r - BG.r) ** 2 + (g - BG.g) ** 2 + (b - BG.b) ** 2);
 }
 
-// El arte fue diseñado sobre fondo magenta claro; contra negro terminal las sombras
-// (navy oscuro) casi desaparecen. Elevamos un piso de luminosidad en HSL para que
-// todo "brille" tenue (efecto glow de terminal) sin perder el matiz original.
-function rgbToHsl(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0;
-  const l = (max + min) / 2;
-  const d = max - min;
-  if (d !== 0) {
-    s = d / (1 - Math.abs(2 * l - 1));
-    switch (max) {
-      case r: h = ((g - b) / d) % 6; break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h *= 60; if (h < 0) h += 360;
-  }
-  return [h, s, l];
-}
-function hslToRgb(h, s, l) {
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = l - c / 2;
-  let [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x]
-    : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
-}
-const MIN_L = 0.32, MAX_L = 0.94, SAT_BOOST = 1.18;
-function glow(r, g, b) {
-  const [h, s, l] = rgbToHsl(r, g, b);
-  const l2 = MIN_L + l * (MAX_L - MIN_L);
-  const s2 = Math.min(1, s * SAT_BOOST);
-  return hslToRgb(h, s2, l2);
-}
 
 async function main() {
   const img = sharp(SRC);
@@ -100,7 +91,25 @@ async function main() {
     .raw()
     .toBuffer();
 
-  // 4) emitir <pre> con spans: 1 por celda visible, agrupando color+char consecutivos por fila
+  // 4) luminancia cruda por celda + stretch de contraste (min/max SOLO del personaje,
+  //    no del lienzo completo) para sacar más gradación tonal de zonas planas como la piel
+  const cellLum = new Float32Array(COLS * rows).fill(-1);
+  let lumMin = 1, lumMax = 0;
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const idx = (y * COLS + x) * 4;
+      if (resized[idx + 3] < 40) continue;
+      const l = (0.299 * resized[idx] + 0.587 * resized[idx + 1] + 0.114 * resized[idx + 2]) / 255;
+      cellLum[y * COLS + x] = l;
+      if (l < lumMin) lumMin = l;
+      if (l > lumMax) lumMax = l;
+    }
+  }
+  const GAMMA = 0.82; // <1 levanta medios tonos, más textura visible
+  const range = Math.max(0.001, lumMax - lumMin);
+  const normLum = (l) => Math.pow(Math.min(1, Math.max(0, (l - lumMin) / range)), GAMMA);
+
+  // 5) emitir <pre> con spans: 1 por celda visible, agrupando color+char consecutivos por fila
   let html = "";
   for (let y = 0; y < rows; y++) {
     let row = "";
@@ -113,17 +122,16 @@ async function main() {
       runText = "";
     };
     for (let x = 0; x < COLS; x++) {
-      const idx = (y * COLS + x) * 4;
-      const a = resized[idx + 3];
-      if (a < 40) {
+      const raw = cellLum[y * COLS + x];
+      if (raw < 0) {
         if (runColor !== null) flush();
         runColor = null;
         runText += " ";
         continue;
       }
-      const [r, g, b] = glow(resized[idx], resized[idx + 1], resized[idx + 2]);
-      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      const ch = RAMP[Math.min(RAMP.length - 1, Math.floor(lum * RAMP.length))];
+      const t = normLum(raw);
+      const [r, g, b] = paletteColor(t);
+      const ch = RAMP[Math.min(RAMP.length - 1, Math.floor(t * RAMP.length))];
       const colorKey = `${r},${g},${b}`;
       if (colorKey !== runColor) { flush(); runColor = colorKey; }
       runText += ch;

@@ -74,10 +74,10 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
     filter: drop-shadow(0 0 26px rgba(252,255,82,.10));
   }
   .hero-mascot pre {
-    font-family: var(--mono); font-size: 8.5px; line-height: 8.5px; letter-spacing: 0;
+    font-family: var(--mono); font-size: 5.6px; line-height: 5.6px; letter-spacing: 0;
     white-space: pre; margin: 0;
   }
-  @media (max-width: 780px) { .hero { grid-template-columns: 1fr; } .hero-mascot { justify-self: start; opacity: .5; } .hero-mascot pre { font-size: 6px; line-height: 6px; } }
+  @media (max-width: 780px) { .hero { grid-template-columns: 1fr; } .hero-mascot { justify-self: start; opacity: .5; } .hero-mascot pre { font-size: 4px; line-height: 4px; } }
   .kicker { color: var(--yellow); font-size: 12px; letter-spacing: .28em; text-transform: uppercase; margin-bottom: 18px; opacity: 0; animation: rise .6s .1s forwards; }
   h1 {
     font-family: var(--display); font-weight: 700; font-size: clamp(42px, 7.5vw, 84px);
