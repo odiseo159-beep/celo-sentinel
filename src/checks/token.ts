@@ -47,7 +47,9 @@ export async function checkToken(raw: string): Promise<TokenReport> {
   }
 
   const verified = !!(source?.is_verified || source?.is_fully_verified);
-  if (code && !verified) {
+  if (code && source === null) {
+    flags.push({ id: "source_check_unavailable", severity: "info", message: "No se pudo consultar el estado de verificación (Blockscout no respondió)." });
+  } else if (code && !verified) {
     flags.push({ id: "unverified", severity: "high", message: "El código del token NO está verificado." });
   }
 

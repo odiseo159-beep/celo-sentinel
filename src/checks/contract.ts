@@ -43,7 +43,10 @@ export async function checkContract(raw: string): Promise<ContractReport> {
   }
 
   const verified = !!(source?.is_verified || source?.is_fully_verified);
-  if (code && !verified) {
+  if (code && source === null) {
+    // Blockscout no respondió (timeout/caído) — no es lo mismo que "confirmado sin verificar".
+    flags.push({ id: "source_check_unavailable", severity: "info", message: "No se pudo consultar el estado de verificación (Blockscout no respondió)." });
+  } else if (code && !verified) {
     flags.push({ id: "unverified", severity: "high", message: "El código del contrato NO está verificado en Blockscout." });
   }
 

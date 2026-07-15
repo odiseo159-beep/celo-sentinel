@@ -161,15 +161,24 @@ export async function honeypotSim(token: Address): Promise<HoneypotSim> {
 }
 
 // --- Blockscout REST helpers ---
+// Timeout propio y corto: Vercel corta la función entera a los 10s (plan Hobby),
+// mejor degradar (flag "no se pudo verificar") que arrastrar un fetch colgado hasta ahí.
+const BLOCKSCOUT_TIMEOUT_MS = 6_000;
+
 async function blockscout<T>(path: string): Promise<T | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), BLOCKSCOUT_TIMEOUT_MS);
   try {
     const res = await fetch(`${config.blockscoutUrl}${path}`, {
       headers: { accept: "application/json" },
+      signal: controller.signal,
     });
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
