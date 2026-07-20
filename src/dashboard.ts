@@ -91,8 +91,8 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
   @keyframes blink { 50% { opacity: 0; } }
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-  .heromtr { display: flex; gap: 40px; margin-top: 44px; flex-wrap: wrap; opacity: 0; animation: rise .6s .5s forwards; }
-  .mtr .n { font-family: var(--display); font-size: 30px; font-weight: 600; color: var(--yellow); }
+  .heromtr { display: flex; gap: 28px; margin-top: 44px; flex-wrap: wrap; opacity: 0; animation: rise .6s .5s forwards; }
+  .mtr .n { font-family: var(--display); font-size: 26px; font-weight: 600; color: var(--yellow); white-space: nowrap; }
   .mtr .l { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
 
   /* section titles */
