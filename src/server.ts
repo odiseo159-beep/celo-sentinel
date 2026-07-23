@@ -7,6 +7,8 @@ import { checkToken } from "./checks/token.js";
 import { checkContract } from "./checks/contract.js";
 import { checkWallet } from "./checks/wallet.js";
 import { dashboardHtml } from "./dashboard.js";
+import { getIncomingSettlements } from "./chain.js";
+import { formatUnits } from "viem";
 
 const PRICE = { asset: USDT, amount: config.checkPriceUsdt, extra: { ...USDT_EIP712 } };
 
@@ -74,6 +76,18 @@ export function buildServer() {
   app.get("/check/wallet/:addr", handle(checkWallet));
 
   app.get("/health", (_req, res) => res.json({ ok: true, service: "celo-sentinel", x402: x402Enabled }));
+
+  // Prueba en vivo de uso real: cuántos pagos x402 se liquidaron de verdad contra
+  // el payTo, y cuánto volumen — leído directo de Blockscout, no de un contador local.
+  app.get("/stats", async (_req, res) => {
+    const s = await getIncomingSettlements(config.payTo);
+    res.json({
+      settlements: s.count,
+      volumeUsdt: formatUnits(s.volumeRaw, 6),
+      uniquePayers: s.payers,
+      lastSettlementAt: s.lastAt,
+    });
+  });
 
   // Archivo de registro ERC-8004 (agentURI apunta aquí al registrar en el IdentityRegistry)
   const registrationHandler = (req: Request, res: Response) => {

@@ -93,6 +93,17 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
 
   .heromtr { display: flex; gap: 28px; margin-top: 44px; flex-wrap: wrap; opacity: 0; animation: rise .6s .5s forwards; }
   .mtr .n { font-family: var(--display); font-size: 26px; font-weight: 600; color: var(--yellow); white-space: nowrap; }
+
+  /* live activity: prueba de uso real, no una demo */
+  .liveactivity {
+    margin-top: 26px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 16px; border: 1px solid rgba(74,222,128,.35); border-radius: 8px;
+    background: rgba(74,222,128,.04); font-size: 12.5px; opacity: 0; animation: rise .6s .62s forwards;
+  }
+  .liveactivity .ping { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 7px var(--green); flex: none; animation: pulse 2s ease-in-out infinite; }
+  .liveactivity b { color: var(--green); font-weight: 600; }
+  .liveactivity .sep { color: var(--dim); }
   .mtr .l { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
 
   /* section titles */
@@ -180,6 +191,7 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
         <div class="mtr"><div class="n">0 gas</div><div class="l">EIP-3009 · facilitator pays</div></div>
         <div class="mtr"><div class="n" id="statmtr">—</div><div class="l">status</div></div>
       </div>
+      <div class="liveactivity" id="liveactivity"><span class="ping"></span><span id="liveactivity-text">checking live settlements…</span></div>
     </div>
     <div class="hero-mascot"><pre>${MASCOT_ASCII_HTML}</pre></div>
   </section>
@@ -243,6 +255,15 @@ export function dashboardHtml(payTo: string, price: string, x402Active: boolean)
   fetch("/health").then(r => r.json()).then(h => {
     document.getElementById("statmtr").textContent = h.ok ? (h.x402 ? "ARMED" : "FREE") : "DOWN";
   }).catch(() => document.getElementById("statmtr").textContent = "DOWN");
+
+  fetch("/stats").then(r => r.json()).then(s => {
+    const el = document.getElementById("liveactivity-text");
+    if (!s.settlements) { el.innerHTML = "no real settlements yet — be the first agent to call a paid endpoint"; return; }
+    const vol = Number(s.volumeUsdt).toFixed(3);
+    el.innerHTML = '<b>' + s.settlements + '</b> real x402 settlement' + (s.settlements === 1 ? '' : 's') +
+      ' <span class="sep">·</span> <b>$' + vol + '</b> USDT settled ' +
+      '<span class="sep">·</span> <b>' + s.uniquePayers + '</b> agent' + (s.uniquePayers === 1 ? '' : 's') + ' paying — live on Celo mainnet';
+  }).catch(() => { document.getElementById("liveactivity-text").textContent = "live stats unavailable"; });
 
   const COLORS = { SAFE: "var(--green)", CAUTION: "var(--amber)", AVOID: "var(--red)" };
   async function probe() {

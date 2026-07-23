@@ -216,3 +216,15 @@ export type AddressCounters = {
 export async function getAddressCounters(addr: Address): Promise<AddressCounters | null> {
   return blockscout<AddressCounters>(`/api/v2/addresses/${addr}/counters`);
 }
+
+type TokenTransfer = { from: { hash: string }; total: { value: string }; timestamp: string };
+
+/** Pagos x402 reales liquidados: transferencias ERC20 entrantes al payTo del sentinel. */
+export async function getIncomingSettlements(payTo: Address): Promise<{ count: number; volumeRaw: bigint; payers: number; lastAt: string | null }> {
+  const res = await blockscout<{ items: TokenTransfer[] }>(`/api/v2/addresses/${payTo}/token-transfers?type=ERC-20`);
+  const items = res?.items ?? [];
+  const incoming = items.filter((t) => t.from?.hash?.toLowerCase() !== payTo.toLowerCase());
+  const volumeRaw = incoming.reduce((sum, t) => sum + BigInt(t.total?.value ?? "0"), 0n);
+  const payers = new Set(incoming.map((t) => t.from.hash.toLowerCase())).size;
+  return { count: incoming.length, volumeRaw, payers, lastAt: incoming[0]?.timestamp ?? null };
+}
